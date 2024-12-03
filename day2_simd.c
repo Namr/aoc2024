@@ -84,43 +84,6 @@ void copy_line_with_exclusion(int8_t* line, int8_t* line_copy, int8_t size, int8
   }
 }
 
-bool is_line_safe_with_exclusion(int8_t * line, int8_t size, int8_t skip_idx) {
-  int8_t increasing = -1; // -1 = unknown, 0 = false, 1 = true
-  int8_t pi = 1;
-  int8_t bi = 0;
-  if(skip_idx == 0) {
-    bi++;
-    pi++;
-  }
-
-  while(pi < size) {
-    if(bi == skip_idx) {
-      bi++;
-    } else if(pi == skip_idx) {
-      pi++;
-      if(pi >= size) {
-        break;
-      }
-    }
-
-    int8_t dist = line[bi]  - line[pi];
-    int8_t dist_abs = abs(dist);
-    if(increasing == -1) {
-      increasing = dist < 0;
-    } else if(dist < 0 != increasing){
-      return false;
-    }
-    
-    if(dist_abs > 3 || dist_abs <= 0) {
-      return false;
-    }
-
-    bi++;
-    pi++;
-  }
-  return true;
-}
-
 int main(int argc, char** argv) {
   if(argc != 2) {
     printf("You need to enter the input filename as an arguement");

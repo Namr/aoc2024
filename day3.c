@@ -26,8 +26,6 @@ int main(int argc, char** argv) {
   int fd = open(argv[1], O_RDONLY);
   char* file_start = mmap(NULL, input_size, PROT_READ, MAP_SHARED, fd, 0);
   char* file = file_start;
-  int* line = malloc(10 * sizeof(int));
-  int line_size = 0;
   
   int num1 = 0;
   int num2 = 0;
@@ -103,5 +101,4 @@ int main(int argc, char** argv) {
   printf("compute time: %lu usec \n", compute_time);
 
   munmap(file_start, input_size);
-  free(line);
 }

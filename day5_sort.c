@@ -4,34 +4,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <ctype.h>
 
-void move_num_back(int16_t* list, int list_size, int index_to_move, int index_to_move_to) {
-  for(int i = index_to_move; i > index_to_move_to; i--) {
-    int tmp = list[i];
-    list[i] = list[i-1];
-    list[i-1] = tmp;
-  }
-}
+int16_t* lookup_table;
+int16_t* lookup_table_limits;
 
-bool is_list_ok(int16_t* list, int list_size, int16_t* lookup_table, int16_t* lookup_table_limits) {
-  for(int i = 0; i < list_size; i++) {
-    int current_item = list[i];
-    // look at all items ahead
-    for(int c = i+1; c < list_size; c++) {
-
-      // ensure that the item to check is not in the list of banned items for the current item
-      int item_to_check = list[c];
-      for(int x = 0; x < lookup_table_limits[current_item]; x++) {
-        if(lookup_table[(current_item * 100) + x] == item_to_check) {
-          move_num_back(list, list_size, c, i);
-          is_list_ok(list, list_size, lookup_table, lookup_table_limits);
-          return false;
-        }
-      }
+int lookup_cmp(const void* a, const void* b) {
+  int16_t aa = *(int16_t*)a;
+  int16_t bb = *(int16_t*)b;
+  
+  for(int i = 0; i < lookup_table_limits[aa]; i++) {
+    if(lookup_table[(aa * 100) + i] == bb) {
+      return 1;
     }
   }
-  return true;
+
+  for(int i = 0; i < lookup_table_limits[bb]; i++) {
+    if(lookup_table[(bb * 100) + i] == aa) {
+      return -1;
+    }
+  }
+  
+  return 0;
 }
 
 int main(int argc, char** argv) {
@@ -56,8 +51,8 @@ int main(int argc, char** argv) {
   char* file = file_start;
 
   // lookup table (x,y) s.t all x in y are all numbers that cannot preceed y in a valid list
-  int16_t* lookup_table = malloc(100 * 100 * sizeof(int16_t));
-  int16_t* lookup_table_limits = malloc(100 * sizeof(int16_t));
+  lookup_table = malloc(100 * 100 * sizeof(int16_t));
+  lookup_table_limits = malloc(100 * sizeof(int16_t));
   int total = 0;
   
   int first_num = 0;
@@ -89,6 +84,7 @@ int main(int argc, char** argv) {
 
   // consume list
   int16_t* list = malloc(100 * sizeof(int16_t));
+  int16_t* sorted_list = malloc(100 * sizeof(int16_t));
   int list_size = 0;
   while(file < file_start + input_size) {
     // capture num
@@ -103,10 +99,11 @@ int main(int argc, char** argv) {
     // check if we are done with a list
     if(*file++ == '\n') {
       // for every item in the list
-      if(!is_list_ok(list, list_size, lookup_table, lookup_table_limits)) {
+      memcpy(sorted_list, list, list_size * sizeof(int16_t));
+      qsort(list, list_size, sizeof(int16_t), lookup_cmp);
+      if(memcmp(sorted_list, list, list_size * sizeof(uint16_t))) {
         total += list[list_size / 2];
       }
-
       list_size = 0;
     }
   }
@@ -120,4 +117,5 @@ int main(int argc, char** argv) {
   free(lookup_table);
   free(lookup_table_limits);
   free(list);
+  free(sorted_list);
 }

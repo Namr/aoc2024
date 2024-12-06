@@ -192,8 +192,11 @@ int main(int argc, char** argv) {
       char c = file[(y * (line_width+1)) + x];
       total += xmas_forward_sm(&forward_state, c);
       total += xmas_backward_sm(&backward_state, c);
-      total += xmas_diag_down_right(x, y);
-      total += xmas_diag_down_left(x, y);
+
+      if(c == 'X' || c == 'S') {
+        total += xmas_diag_down_right(x, y);
+        total += xmas_diag_down_left(x, y);
+      }
 
       if(c == 'A') { // just an optimization
         p2_total += mas_finder(x, y);

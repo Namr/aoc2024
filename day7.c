@@ -9,17 +9,41 @@
 #include <stdint.h>
 #include <math.h>
 
+uint64_t num_digits(int n) { // we love recursion dont we folks
+  if(n < 10) {
+    return 1;
+  }
+  return 1 + num_digits(n / 10);
+}
 // operations is a bit array where 0 = + and 1 = *
-uint64_t compute_line_total(int* line, int line_size, int operations) {
+uint64_t compute_line_total(int* line, int line_size, int* operations) {
   uint64_t total = line[0];
   for(int i = 1; i < line_size; i++) {
-    if(((operations >> (i-1)) & 1)) {
+    if(operations[i-1] == 0) {
       total *= line[i];
+    } else if(operations[i-1] == 1) {
+      total += line[i];
     } else {
+      int nd = num_digits(line[i]);
+      total *= pow(10, nd);
       total += line[i];
     }
   }
   return total;
+}
+
+bool is_line_good(int* line, int line_size, uint64_t line_total, int* operations, int oi) {
+  if(oi == line_size - 1) {
+    return compute_line_total(line, line_size, operations) == line_total;
+  }
+
+  bool is_good = false;
+  for(int i = 0; i < 3; i++) {
+    operations[oi] = i;
+    is_good |= is_line_good(line, line_size, line_total, operations, oi + 1);
+  }
+
+  return is_good;
 }
 
 int main(int argc, char** argv) {
@@ -47,7 +71,7 @@ int main(int argc, char** argv) {
 
   int* line = malloc(15 * sizeof(int));
   int line_size = 0;
-  int operations = 0; // this is a bitset representing the current permutation of +/* ops being tested
+  int* operations = malloc(15 * sizeof(int));
 
   uint64_t total = 0;
   uint64_t line_total = 0;
@@ -63,12 +87,9 @@ int main(int argc, char** argv) {
       // end of line
       
       // to test every permutation of binary bits of size n, increment an int up to 2^n
-      int op_limit = pow(2, line_size - 1);
-      for(int i = 0; i < op_limit; i++) {
-        if(compute_line_total(line, line_size, operations++) == line_total) {
-          total += line_total;
-          break;
-        }
+      memset(operations, 0, 15 * sizeof(int));
+      if(is_line_good(line, line_size, line_total, operations, 0)) {
+        total += line_total;
       }
 
       // reset line vars
